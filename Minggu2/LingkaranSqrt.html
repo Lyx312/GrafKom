@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Drawing using Sqrt Function</title>
+    <style>
+        canvas {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="circleCanvas" width="512" height="512"></canvas>
+    <script>
+        const canvas = document.getElementById('circleCanvas');
+        const ctx = canvas.getContext('2d');
+        let centerPoint = null;
+
+        // Event listener for mouse clicks
+        canvas.addEventListener('click', handleCanvasClick);
+
+        function setPixel(x, y) {
+            ctx.fillRect(x, y, 1, 1);
+        }
+
+        function drawCircle(centerX, centerY, radius) {
+            const step = 1 / radius; // Adjust step size for better accuracy
+            for (let x = -radius; x <= radius; x+=step) {
+                const y = Math.round(Math.sqrt(radius * radius - x * x));
+                setPixel(centerX + x, centerY + y);
+                setPixel(centerX + x, centerY - y);
+            }
+        }
+
+        function handleCanvasClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            if (!centerPoint) {
+                // First click: Set the center point
+                centerPoint = { x, y };
+            } else {
+                // Second click: Calculate radius and draw the circle
+                const radius = Math.sqrt((x - centerPoint.x) ** 2 + (y - centerPoint.y) ** 2);
+                drawCircle(centerPoint.x, centerPoint.y, radius);
+
+                // Reset for the next circle
+                centerPoint = null;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Drawing using SinCos function</title>
+    <style>
+        canvas {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="circleCanvas" width="512" height="512"></canvas>
+    <script>
+        const canvas = document.getElementById('circleCanvas');
+        const ctx = canvas.getContext('2d');
+        let centerPoint = null;
+
+        // Event listener for mouse clicks
+        canvas.addEventListener('click', handleCanvasClick);
+
+        function setPixel(x, y) {
+            ctx.fillRect(x, y, 1, 1);
+        }
+
+        function drawCircle(centerX, centerY, radius) {
+            const numPoints = 360; // Number of points to approximate the circle
+            const step = 1 / radius;
+            for (let i = 0; i < numPoints; i+=step) {
+                const angle = (i / numPoints) * 2 * Math.PI;
+                const x = Math.round(centerX + radius * Math.cos(angle));
+                const y = Math.round(centerY + radius * Math.sin(angle));
+                setPixel(x, y);
+            }
+        }
+
+        function handleCanvasClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+
+            if (!centerPoint) {
+                // First click: Set the center point
+                centerPoint = { x, y };
+            } else {
+                // Second click: Calculate radius using trigonometry
+                const dx = x - centerPoint.x;
+                const dy = y - centerPoint.y;
+                const angle = Math.atan2(dy, dx); // Calculate angle
+                const radius = Math.sqrt(dx ** 2 + dy ** 2);
+                drawCircle(centerPoint.x, centerPoint.y, radius);
+
+                // Reset for the next circle
+                centerPoint = null;
+            }
+        }
+    </script>
+</body>
+</html>

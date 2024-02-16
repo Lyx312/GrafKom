@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Line with Bresenham Algorithm</title>
+    <style>
+        canvas {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body onload="init()">
+    <canvas id="can" width="512" height="512"></canvas>
+    <script>
+        var canvas, ctx, point1 = null, point2 = null;
+
+        function init() {
+            canvas = document.getElementById('can');
+            ctx = canvas.getContext("2d");
+            canvas.addEventListener("mousedown", function (e) { findxy('down', e) }, false);
+        }
+
+        function setPixel(x, y) {
+            ctx.fillRect(x, y, 1, 1);
+        }
+
+        function drawLineBresenham(p1, p2) {
+            var dx = Math.abs(p2.x - p1.x);
+            var dy = Math.abs(p2.y - p1.y);
+            var sx = (p1.x < p2.x) ? 1 : -1;
+            var sy = (p1.y < p2.y) ? 1 : -1;
+            var err = dx - dy;
+
+            while (true) {
+                setPixel(p1.x, p1.y);
+                if (p1.x === p2.x && p1.y === p2.y) break;
+                var e2 = 2 * err;
+                if (e2 > -dy) { err -= dy; p1.x += sx; }
+                if (e2 < dx) { err += dx; p1.y += sy; }
+            }
+        }
+
+        function findxy(res, e) {
+            if (res === 'down') {
+                if (!point1) {
+                    point1 = { x: e.clientX - canvas.offsetLeft, y: e.clientY - canvas.offsetTop };
+                } else if (!point2) {
+                    point2 = { x: e.clientX - canvas.offsetLeft, y: e.clientY - canvas.offsetTop };
+                    drawLineBresenham(point1, point2);
+                    point1 = null;
+                    point2 = null;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
