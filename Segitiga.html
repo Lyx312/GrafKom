@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Triangle Random Color</title>
+    <style>
+        canvas {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas" width="512" height="512">Your browser does not support the HTML5 canvas tag.</canvas>
+</body>
+
+<script>
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    var clicks = [];
+
+    c.addEventListener('click', function(event) {
+        var rect = c.getBoundingClientRect();
+        var x = event.clientX - rect.left;
+        var y = event.clientY - rect.top;
+        clicks.push({x: x, y: y});
+        if (clicks.length == 3) {
+            drawTriangle();
+            clicks = [];
+        }
+    }, false);
+
+    function drawTriangle() {
+        var minX = Math.min(clicks[0].x, clicks[1].x, clicks[2].x);
+        var minY = Math.min(clicks[0].y, clicks[1].y, clicks[2].y);
+        var maxX = Math.max(clicks[0].x, clicks[1].x, clicks[2].x);
+        var maxY = Math.max(clicks[0].y, clicks[1].y, clicks[2].y);
+
+        var lines = [
+            getLine(clicks[0], clicks[1]),
+            getLine(clicks[1], clicks[2]),
+            getLine(clicks[2], clicks[0])
+        ];
+
+        if (lines[0].C + lines[1].C + lines[2].C < 0) {
+            lines.forEach(function(line) {
+                line.A *= -1;
+                line.B *= -1;
+                line.C *= -1;
+            });
+        }
+
+        ctx.fillStyle = getRandomColor();
+        for (var i = minX; i <= maxX; i+=0.5) {
+            for (var j = minY; j <= maxY; j+=0.5) {
+                if (insideTriangle(i, j, lines)) {
+                    ctx.fillRect(i, j, 1, 1);
+                }
+            }
+        }
+    }
+
+    function getLine(p1, p2) {
+        var A = p2.y - p1.y;
+        var B = p1.x - p2.x;
+        var C = -(A * p1.x + B * p1.y);
+        return {A: A, B: B, C: C};
+    }
+
+    function insideTriangle(x, y, lines) {
+        return lines.every(function(line) {
+            return line.A * x + line.B * y + line.C > 0;
+        });
+    }
+
+    function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+</script>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smooth Triangle</title>
+    <style>
+        canvas {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="512" height="512" style="border:1px solid #d3d3d3;">
+        Your browser does not support the HTML5 canvas tag.</canvas>
+    <label for="colorPicker1">P1:</label>
+    <input type="color" id="colorPicker1" value="#ff0000">
+    <label for="colorPicker2">P2:</label>
+    <input type="color" id="colorPicker2" value="#00ff00">
+    <label for="colorPicker3">P3:</label>
+    <input type="color" id="colorPicker3" value="#0000ff">
+</body>
+<script>
+    var c = document.getElementById("myCanvas");
+    var ctx = c.getContext("2d");
+    var colorPickers = [
+        document.getElementById("colorPicker1"),
+        document.getElementById("colorPicker2"),
+        document.getElementById("colorPicker3")
+    ];
+    var clicks = [];
+
+    c.addEventListener('click', function (event) {
+        var rect = c.getBoundingClientRect();
+        var x = event.clientX - rect.left;
+        var y = event.clientY - rect.top;
+        clicks.push({ x: x, y: y, color: hexToRgb(colorPickers[clicks.length].value) });
+        if (clicks.length == 3) {
+            drawGradientTriangle();
+            clicks = [];
+        }
+    }, false);
+
+    function drawGradientTriangle() {
+        var minX = Math.min(clicks[0].x, clicks[1].x, clicks[2].x);
+        var minY = Math.min(clicks[0].y, clicks[1].y, clicks[2].y);
+        var maxX = Math.max(clicks[0].x, clicks[1].x, clicks[2].x);
+        var maxY = Math.max(clicks[0].y, clicks[1].y, clicks[2].y);
+
+        var planes = [
+            getPlane(clicks[0], clicks[1], clicks[2], 'r'),
+            getPlane(clicks[0], clicks[1], clicks[2], 'g'),
+            getPlane(clicks[0], clicks[1], clicks[2], 'b')
+        ];
+
+        for (var i = minX; i <= maxX; i+=0.5) {
+            for (var j = minY; j <= maxY; j+=0.5) {
+                if (insideTriangle(i, j)) {
+                    var r = getInterpolation(i, j, planes[0]);
+                    var g = getInterpolation(i, j, planes[1]);
+                    var b = getInterpolation(i, j, planes[2]);
+                    ctx.fillStyle = 'rgb(' + r + ',' + g + ',' + b + ')';
+                    ctx.fillRect(i, j, 1, 1);
+                }
+            }
+        }
+    }
+
+    function getPlane(p1, p2, p3, color) {
+        var v1 = { x: p2.x - p1.x, y: p2.y - p1.y, z: p2.color[color] - p1.color[color] };
+        var v2 = { x: p3.x - p1.x, y: p3.y - p1.y, z: p3.color[color] - p1.color[color] };
+        var cross = {
+            x: v1.y * v2.z - v1.z * v2.y,
+            y: v1.z * v2.x - v1.x * v2.z,
+            z: v1.x * v2.y - v1.y * v2.x
+        };
+        return { A: cross.x, B: cross.y, C: cross.z, D: -(cross.x * p1.x + cross.y * p1.y + cross.z * p1.color[color]) };
+    }
+
+    function insideTriangle(x, y) {
+        var v0 = { x: clicks[2].x - clicks[0].x, y: clicks[2].y - clicks[0].y };
+        var v1 = { x: clicks[1].x - clicks[0].x, y: clicks[1].y - clicks[0].y };
+        var v2 = { x: x - clicks[0].x, y: y - clicks[0].y };
+
+        var dot00 = dot(v0, v0);
+        var dot01 = dot(v0, v1);
+        var dot02 = dot(v0, v2);
+        var dot11 = dot(v1, v1);
+        var dot12 = dot(v1, v2);
+
+        var invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+        var u = (dot11 * dot02 - dot01 * dot12) * invDenom;
+        var v = (dot00 * dot12 - dot01 * dot02) * invDenom;
+
+        return (u >= 0) && (v >= 0) && (u + v < 1);
+    }
+
+    function dot(v1, v2) {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+
+    function getInterpolation(x, y, plane) {
+        return -(plane.A * x + plane.B * y + plane.D) / plane.C;
+    }
+
+    function hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+</script>
+
+</html>
