@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL Red Triangle</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            border: 2px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="512px" height="512px"></canvas>
+    <script>
+        var canvas = document.getElementById('canvas');
+        var gl = canvas.getContext('webgl2');
+    
+        var vertices = [
+            -0.5, -0.5,  // Bottom left corner
+             0.5, -0.5,  // Bottom right corner
+             0.0,  0.5   // Top center
+        ];
+    
+        var colors = [
+            1.0, 0.0, 0.0,  // Red
+            0.0, 1.0, 0.0,  // Green
+            0.0, 0.0, 1.0   // Blue
+        ];
+    
+        var vertex_buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+    
+        var color_buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    
+        var vertCode = `#version 300 es
+        in vec2 coordinates;
+        in vec3 color;
+        out vec3 vColor;
+        void main(void) {
+            gl_Position = vec4(coordinates, 0.0, 1.0);
+            vColor = color;
+        }`;
+    
+        var vertShader = gl.createShader(gl.VERTEX_SHADER);
+        gl.shaderSource(vertShader, vertCode);
+        gl.compileShader(vertShader);
+    
+        var fragCode = `#version 300 es
+        precision mediump float;
+        in vec3 vColor;
+        out vec4 FragColor;
+        void main(void) {
+            FragColor = vec4(vColor, 1.0);
+        }`;
+    
+        var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(fragShader, fragCode);
+        gl.compileShader(fragShader);
+    
+        var shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertShader);
+        gl.attachShader(shaderProgram, fragShader);
+        gl.linkProgram(shaderProgram);
+        gl.useProgram(shaderProgram);
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertex_buffer);
+        var coord = gl.getAttribLocation(shaderProgram, "coordinates");
+        gl.vertexAttribPointer(coord, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(coord);
+    
+        gl.bindBuffer(gl.ARRAY_BUFFER, color_buffer);
+        var color = gl.getAttribLocation(shaderProgram, "color");
+        gl.vertexAttribPointer(color, 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(color);
+    
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.enable(gl.DEPTH_TEST);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.viewport(0,0,canvas.width,canvas.height);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+    </script>
+</body>
+</html>
